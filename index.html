@@ -25,20 +25,23 @@
           <option value="asha">ASHA</option>
         </select>
         <span id="email-status" class="status-pill demo">Email: Demo</span>
-        <span id="sync-indicator" class="status-pill live" title="Hospital live sync">Sync: on</span>
+        <span id="sync-indicator" class="status-pill live" title="Consent-based sync (ABDM-style, simulated for demo)">Consent sync: on</span>
+        <span id="current-clock" class="status-pill clock" title="Your computer's local time">--:--:--</span>
         <button id="btn-help" class="btn ghost">❓ Help</button>
         <button id="btn-reset" class="btn ghost" title="Reset demo data">Reset</button>
       </div>
     </header>
 
     <nav class="tabs">
-      <button class="tab active" data-tab="dashboard">Dashboard</button>
+      <button class="tab active" data-tab="dashboard">Dashboard <span class="tab-badge hidden" id="badge-dashboard">0</span></button>
+      <button class="tab" data-tab="analytics">Analytics</button>
       <button class="tab" data-tab="passport">Care Passport</button>
-      <button class="tab" data-tab="messages">Messages</button>
-      <button class="tab" data-tab="calendar">Calendar & Book</button>
+      <button class="tab" data-tab="messages">Messages <span class="tab-badge hidden" id="badge-messages">0</span></button>
+      <button class="tab" data-tab="calendar">Calendar & Book <span class="tab-badge hidden" id="badge-calendar">0</span></button>
       <button class="tab" data-tab="fetch">Fetch records</button>
-      <button class="tab" data-tab="verify">Verify Desk</button>
+      <button class="tab" data-tab="verify">Verify Desk <span class="tab-badge hidden" id="badge-verify">0</span></button>
     </nav>
+    <div id="tab-notify-strip" class="tab-notify-strip hidden" role="status"></div>
 
     <!-- HELP PANEL -->
     <section id="panel-help" class="card panel hidden">
@@ -51,7 +54,7 @@
         <ul class="help-list">
           <li><strong>Dashboard</strong> — open journeys, overdue/blocked alerts</li>
           <li><strong>Care Passport</strong> — 6 stages; mark done or verify</li>
-          <li><strong>Messages</strong> — chat threads + quick replies</li>
+          <li><strong>Messages</strong> — threads + Guided FAQ / Quick Reply Assistant</li>
           <li><strong>Calendar & Book</strong> — book appointment → email confirmation</li>
           <li><strong>Report upload</strong> — on Care Passport, attach PDF/image to Report stage</li>
           <li><strong>Reminders</strong> — automatic email for appointments today/tomorrow</li>
@@ -86,6 +89,28 @@ PORT=5000</pre>
 
     <section id="tab-dashboard" class="tab-panel">
       <div class="metrics" id="metrics"></div>
+
+      <!-- Stuck / drop-off signal -->
+      <div id="stuck-banner" class="stuck-banner hidden" role="alert">
+        <div class="stuck-banner-inner">
+          <strong id="stuck-title">⚠ Stuck referrals</strong>
+          <p id="stuck-detail" class="muted" style="margin:0.25rem 0 0"></p>
+          <ul id="stuck-list" class="stuck-list"></ul>
+        </div>
+      </div>
+
+      <!-- Guided demo path -->
+      <div class="card demo-path-card" style="margin-bottom:1.1rem">
+        <div class="card-head"><h2>Demo path (90 sec)</h2></div>
+        <ol class="demo-steps">
+          <li>Open a stuck journey below (e.g. <strong>Ramesh Kumar</strong> — eye follow-up overdue).</li>
+          <li><strong>Fetch records</strong> → search <code>Meera Patel</code> → OTP <code>1234</code> → see consent receipt.</li>
+          <li>Check <strong>Recent Access</strong> — who viewed what.</li>
+          <li>(Optional) Hospital network :5001 → add report → watch tab badge + toast.</li>
+        </ol>
+        <button type="button" class="btn primary small" id="btn-demo-fetch">Jump to Fetch · Meera Patel</button>
+      </div>
+
       <div class="card" style="margin-bottom:1.1rem">
         <div class="card-head"><h2>Add person</h2></div>
         <form id="add-patient-form" class="add-person-form">
@@ -112,6 +137,28 @@ PORT=5000</pre>
           <div id="alerts-list" class="list"></div>
         </div>
       </div>
+      <div class="card" style="margin-top:1.1rem">
+        <div class="card-head"><h2>Recent Access</h2><span id="access-count" class="badge">0</span></div>
+        <p class="muted" style="margin-bottom:.5rem">Demo audit trail — who viewed patient records / reports</p>
+        <div id="access-log-list" class="list"></div>
+      </div>
+    </section>
+
+    <section id="tab-analytics" class="tab-panel hidden">
+      <div class="analytics-head card">
+        <div>
+          <div class="eyebrow">Operations view</div>
+          <h2>Adherence & missed follow-ups</h2>
+          <p class="muted">A practical view of where patients are progressing, where actions are overdue, and which hospitals need follow-up attention.</p>
+        </div>
+        <button id="btn-refresh-analytics" type="button" class="btn primary small">Refresh analytics</button>
+      </div>
+      <div id="analytics-metrics" class="metrics analytics-metrics"></div>
+      <div class="grid-2 analytics-grid">
+        <div class="card"><div class="card-head"><h2>Hospital comparison</h2><span id="analytics-updated" class="badge">—</span></div><div id="analytics-hospitals" class="analytics-table"></div></div>
+        <div class="card"><div class="card-head"><h2>Missed follow-ups</h2><span id="analytics-missed-count" class="badge">0</span></div><div id="analytics-missed" class="list analytics-list"></div></div>
+      </div>
+      <div class="card analytics-risk-card"><div class="card-head"><h2>Patients needing attention</h2><span id="analytics-risk-count" class="badge">0</span></div><div id="analytics-risk" class="analytics-risk-grid"></div></div>
     </section>
 
     <section id="tab-passport" class="tab-panel hidden">
@@ -121,6 +168,7 @@ PORT=5000</pre>
           <select id="passport-journey" class="select-inline"></select>
         </div>
         <div id="passport-header" class="passport-header"></div>
+        <div id="patient-care-update" class="patient-care-update" aria-live="polite"></div>
         <div id="passport-stages" class="stages"></div>
         <div class="external-records-box" id="external-records-box" style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line)">
           <h3 style="font-size:0.95rem;margin-bottom:0.35rem">Records from hospitals</h3>
@@ -184,9 +232,10 @@ PORT=5000</pre>
         <div class="card chat-card">
           <div id="chat-header" class="chat-header">Select a thread</div>
           <div id="chat-body" class="chat-body"></div>
+          <p class="muted" style="margin:.35rem 0 .15rem;font-size:.78rem">Guided FAQ · Quick Reply Assistant · Book by sending “Book appointment on DD-MM-YYYY”</p>
           <div class="chat-quick" id="chat-quick"></div>
           <form id="chat-form" class="chat-form">
-            <input id="chat-input" placeholder="Type a message…" autocomplete="off" />
+            <input id="chat-input" placeholder="Ask a question or book on 20-09-2026…" autocomplete="off" />
             <button type="submit" class="btn primary">Send</button>
           </form>
         </div>
@@ -231,6 +280,14 @@ PORT=5000</pre>
             </div>
             <div class="field"><label>Facility</label><input name="facility" placeholder="City Care Hospital" /></div>
             <div class="field"><label>Notes</label><textarea name="notes" rows="2"></textarea></div>
+            <div class="summary-notify-box">
+              <div class="summary-notify-title">Pre-visit specialist brief</div>
+              <p class="muted">When SMTP is configured, CareLink automatically emails the one-page care summary to the specialist on the day before or day of the appointment.</p>
+              <div class="row">
+                <div class="field"><label>Specialist name</label><input name="specialist_name" placeholder="Dr. Mehta" /></div>
+                <div class="field"><label>Specialist email</label><input name="specialist_email" type="email" placeholder="specialist@hospital.org" /></div>
+              </div>
+            </div>
             <button type="submit" class="btn primary full" id="btn-submit">Book & Send Email</button>
           </form>
           <div id="form-msg" class="form-msg hidden"></div>
@@ -256,7 +313,7 @@ PORT=5000</pre>
     <section id="tab-fetch" class="tab-panel hidden">
       <div class="card">
         <h2>Fetch care records</h2>
-        <p class="muted">Enter a patient name — CareLink collects visits, reports, and files from every hospital linked to them.</p>
+        <p class="muted">Enter a patient name — CareLink collects visits, reports, and files from every hospital linked to them. Consent (ABDM-style, simulated) is required before results are shown.</p>
         <form id="fetch-form" class="fetch-form">
           <div class="field">
             <label>Patient name or email</label>
@@ -281,6 +338,34 @@ PORT=5000</pre>
     </section>
 
     <div id="toast" class="toast hidden"></div>
+
+    <!-- Consent gate modal (UI simulation of ABDM HIE-CM consent) -->
+    <div id="consent-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+      <div class="modal-card">
+        <h2 id="consent-title">Patient consent required to view records</h2>
+        <p class="muted">In production this is backed by ABDM’s HIE-CM consent manager. For this demo, enter any 4-digit OTP (e.g. <strong>1234</strong>) to grant access.</p>
+        <p class="muted" style="margin-top:0.35rem"><strong>Purpose (simulated):</strong> Share care records with linked facilities for specialist review · validity 24 hours.</p>
+        <div class="field">
+          <label for="consent-otp">OTP</label>
+          <input id="consent-otp" type="text" inputmode="numeric" maxlength="4" placeholder="1234" autocomplete="one-time-code" />
+        </div>
+        <div id="consent-error" class="form-msg error hidden">Enter a 4-digit OTP</div>
+        <div class="modal-actions">
+          <button type="button" class="btn ghost" id="consent-cancel">Cancel</button>
+          <button type="button" class="btn primary" id="consent-grant">Grant consent</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Consent receipt (shown after grant) -->
+    <div id="consent-receipt" class="consent-receipt hidden" role="status">
+      <span class="consent-receipt-icon">✓</span>
+      <div>
+        <strong>Consent granted</strong>
+        <span id="consent-receipt-text" class="muted"></span>
+      </div>
+      <button type="button" class="btn ghost small" id="consent-receipt-dismiss">Dismiss</button>
+    </div>
   </div>
   <script src="/static/app.js"></script>
 </body>

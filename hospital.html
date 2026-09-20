@@ -8,19 +8,19 @@
   <style>
     :root { --c: {{ h.color }}; }
     * { box-sizing: border-box; }
-    body { font-family: "DM Sans", system-ui, sans-serif; margin: 0; background: #f6f8f7; color: #0f1f1c; }
+    body { font-family: "DM Sans", system-ui, sans-serif; margin: 0; background: #f6f8f7; color: #0f1f1c; overflow-x: hidden; }
     header { background: var(--c); color: #fff; padding: 1.5rem 1.25rem; }
     header a { color: rgba(255,255,255,.85); font-size: .85rem; text-decoration: none; }
     header h1 { margin: .35rem 0 0; font-size: 1.6rem; }
     .tag { opacity: .9; font-size: .9rem; margin: .2rem 0 0; }
     .wrap { max-width: 880px; margin: 0 auto; padding: 1.25rem; }
-    .card { background: #fff; border: 1px solid #e2e8e6; border-radius: 14px; padding: 1.1rem 1.2rem; margin-bottom: 1rem; }
+    .card { background: #fff; border: 1px solid #e2e8e6; border-radius: 14px; padding: 1.1rem 1.2rem; margin-bottom: 1rem; min-width: 0; }
     h2 { font-size: 1.05rem; margin: 0 0 .75rem; }
     h3 { font-size: .95rem; margin: 1rem 0 .5rem; color: #3d5a54; }
     .patient { border-top: 1px solid #eef2f1; padding-top: .85rem; margin-top: .85rem; }
     .patient:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
-    .name { font-weight: 700; }
-    .meta { font-size: .85rem; color: #5a726c; margin-top: .2rem; }
+    .name { font-weight: 700; overflow-wrap: anywhere; }
+    .meta { font-size: .85rem; color: #5a726c; margin-top: .2rem; overflow-wrap: anywhere; }
     .pill { display: inline-block; font-size: .7rem; font-weight: 700; padding: .15rem .45rem; border-radius: 6px; background: #e0f2fe; color: #075985; }
     ul { margin: .4rem 0 0; padding-left: 1.1rem; font-size: .88rem; color: #3d5a54; }
     label { display: block; font-size: .78rem; font-weight: 600; margin-bottom: .25rem; color: #3d5a54; }
@@ -47,6 +47,10 @@
     .tabs button.on { background: var(--c); color: #fff; }
     .panel { display: none; }
     .panel.on { display: block; }
+    .sync-banner { background: #e8fbf5; border: 1px solid #a7e6d6; border-radius: 10px; padding: .7rem .8rem; margin-bottom: 1rem; color: #0f766e; font-size: .84rem; }
+    .record-count { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .45rem; }
+    .record-count span { background: #edf6f3; color: #36685e; border-radius: 999px; padding: .2rem .45rem; font-size: .72rem; font-weight: 700; }
+    .patient ul { overflow-wrap: anywhere; }
   </style>
 </head>
 <body>
@@ -57,6 +61,7 @@
     <p class="tag">{{ h.tagline }}</p>
   </header>
   <div class="wrap">
+    <div class="sync-banner"><strong>Live CareLink sync enabled.</strong> New patients, visits, and reports saved here are pushed to CareLink immediately. Keep CareLink running on port 5000 to see the update within a few seconds.</div>
     <div class="card">
       <h2>Add to this hospital (syncs to CareLink on Fetch)</h2>
       <div class="tabs">
@@ -128,12 +133,12 @@
     </div>
 
     <div class="card">
-      <h2>Patients in this hospital ({{ h.patients|length }})</h2>
+      <h2>Patients and reports in this hospital ({{ h.patients|length }})</h2>
       {% for p in h.patients %}
       <div class="patient">
         <div class="name">{{ p.name }}</div>
         <div class="meta">{{ p.email }} {% if p.dob %}· DOB {{ p.dob }}{% endif %}</div>
-        <div class="meta" style="margin-top:.4rem"><span class="pill">Visits ({{ p.visits|length }})</span></div>
+        <div class="record-count"><span>Visits · {{ p.visits|length }}</span><span>Reports · {{ p.reports|length }}</span></div>
         <ul>
           {% for v in p.visits[:6] %}
           <li>{{ v.date }} — {{ v.department }} · {{ v.reason }} ({{ v.status }})</li>
@@ -141,7 +146,6 @@
           <li>No visits yet</li>
           {% endfor %}
         </ul>
-        <div class="meta" style="margin-top:.4rem"><span class="pill">Reports ({{ p.reports|length }})</span></div>
         <ul>
           {% for r in p.reports[:6] %}
           <li>{{ r.date }} — <strong>{{ r.title }}</strong> ({{ r.type }}): {{ r.summary }}</li>

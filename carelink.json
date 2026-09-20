@@ -47,63 +47,9 @@
       "phone": "",
       "age": 24,
       "condition": "Journey closed"
-    },
-    {
-      "id": "p_b2e6b260",
-      "name": "Atharv",
-      "email": "atharvakila@gmail.com",
-      "phone": "",
-      "age": "",
-      "condition": "Imported from hospital network"
     }
   ],
   "journeys": [
-    {
-      "id": "j_7fc87377",
-      "patient_id": "p_b2e6b260",
-      "title": "Imported care journey",
-      "facility": "Hospital network",
-      "status": "open",
-      "stages": {
-        "referral": {
-          "status": "done",
-          "verification": "none",
-          "note": "Imported from hospital network",
-          "updated_at": "2026-09-20T04:05:08.029381Z"
-        },
-        "appointment": {
-          "status": "pending",
-          "verification": "none",
-          "note": "",
-          "updated_at": "2026-09-20T04:05:08.029381Z"
-        },
-        "test": {
-          "status": "locked",
-          "verification": "none",
-          "note": "",
-          "updated_at": "2026-09-20T04:05:08.029381Z"
-        },
-        "report": {
-          "status": "locked",
-          "verification": "none",
-          "note": "",
-          "updated_at": "2026-09-20T04:05:08.029381Z"
-        },
-        "specialist": {
-          "status": "locked",
-          "verification": "none",
-          "note": "",
-          "updated_at": "2026-09-20T04:05:08.029381Z"
-        },
-        "followup": {
-          "status": "locked",
-          "verification": "none",
-          "note": "",
-          "updated_at": "2026-09-20T04:05:08.029381Z"
-        }
-      },
-      "created_at": "2026-09-20T04:05:08.029381Z"
-    },
     {
       "id": "j1",
       "patient_id": "p1",
@@ -115,40 +61,40 @@
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "appointment": {
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "test": {
           "status": "pending",
           "verification": "none",
           "note": "TMT scheduled \u2014 fasting needed",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "report": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "specialist": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "followup": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         }
       },
-      "created_at": "2026-09-15T03:58:06.850222Z"
+      "created_at": "2026-09-15T10:38:56.797080Z"
     },
     {
       "id": "j2",
@@ -161,40 +107,40 @@
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "appointment": {
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "test": {
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "report": {
           "status": "done",
           "verification": "document",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "specialist": {
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "followup": {
           "status": "overdue",
           "verification": "none",
           "note": "Follow-up was due 2 weeks ago",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         }
       },
-      "created_at": "2026-08-11T03:58:06.850222Z"
+      "created_at": "2026-08-11T10:38:56.797080Z"
     },
     {
       "id": "j3",
@@ -207,40 +153,40 @@
           "status": "done",
           "verification": "asha",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "appointment": {
           "status": "done",
           "verification": "asha",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "test": {
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "report": {
           "status": "pending",
           "verification": "none",
           "note": "Lab report uploaded \u2014 needs review",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "specialist": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "followup": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         }
       },
-      "created_at": "2026-09-08T03:58:06.850222Z"
+      "created_at": "2026-09-08T10:38:56.797080Z"
     },
     {
       "id": "j4",
@@ -253,40 +199,40 @@
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "appointment": {
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "test": {
           "status": "blocked",
           "verification": "none",
           "note": "Machine down \u2014 reschedule needed",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "report": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "specialist": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "followup": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         }
       },
-      "created_at": "2026-09-12T03:58:06.850222Z"
+      "created_at": "2026-09-12T10:38:56.797080Z"
     },
     {
       "id": "j5",
@@ -299,40 +245,40 @@
           "status": "done",
           "verification": "asha",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "appointment": {
           "status": "pending",
           "verification": "none",
           "note": "Slot next week",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "test": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "report": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "specialist": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "followup": {
           "status": "locked",
           "verification": "none",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         }
       },
-      "created_at": "2026-09-17T03:58:06.850222Z"
+      "created_at": "2026-09-17T10:38:56.797080Z"
     },
     {
       "id": "j6",
@@ -345,40 +291,40 @@
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "appointment": {
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "test": {
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "report": {
           "status": "done",
           "verification": "document",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "specialist": {
           "status": "done",
           "verification": "provider",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         },
         "followup": {
           "status": "done",
           "verification": "patient",
           "note": "",
-          "updated_at": "2026-09-20T03:58:06.850222Z"
+          "updated_at": "2026-09-20T10:38:56.797080Z"
         }
       },
-      "created_at": "2026-07-22T03:58:06.850222Z"
+      "created_at": "2026-07-22T10:38:56.797080Z"
     }
   ],
   "messages": [
@@ -387,33 +333,67 @@
       "journey_id": "j1",
       "from": "patient",
       "body": "TMT done this morning",
-      "at": "2026-09-20T01:58:06.850222Z"
+      "at": "2026-09-20T08:38:56.797080Z"
     },
     {
       "id": "m2",
       "journey_id": "j1",
       "from": "system",
       "body": "Great \u2014 next step is report review. Upload or ask the lab to share with City Care Hospital.",
-      "at": "2026-09-20T02:03:06.850222Z"
+      "at": "2026-09-20T08:43:56.797080Z"
     },
     {
       "id": "m3",
       "journey_id": "j2",
       "from": "patient",
       "body": "Please reschedule my eye follow-up",
-      "at": "2026-09-19T03:58:06.850222Z"
+      "at": "2026-09-19T10:38:56.797080Z"
     },
     {
       "id": "m4",
       "journey_id": "j2",
       "from": "system",
       "body": "Follow-up is overdue. Reply with preferred dates or call Vision Plus Clinic.",
-      "at": "2026-09-19T04:58:06.850222Z"
+      "at": "2026-09-19T11:38:56.797080Z"
+    },
+    {
+      "id": "598166e5-e4be-49c1-ad33-bceb174927e6",
+      "journey_id": "j1",
+      "from": "patient",
+      "body": "Book on 20-09-2026",
+      "at": "2026-09-20T10:42:03.088901Z"
+    },
+    {
+      "id": "1d919f0b-f142-4b97-89db-72a37314fb3b",
+      "journey_id": "j1",
+      "from": "system",
+      "body": "Your appointment is booked for 2026-09-20 at 17:00 at City Care Hospital. Calendar & Book has been updated automatically. You can reschedule by sending another date in DD-MM-YYYY format.",
+      "at": "2026-09-20T10:42:07.481881Z"
     }
   ],
   "appointments": [
     {
-      "id": "c31d8210-b0d6-486d-ae2a-d44c728e77eb",
+      "id": "39f58dda-626e-47e1-a7f3-4cdd8d41361e",
+      "patient_name": "Meera Patel",
+      "email": "meera@example.com",
+      "date": "2026-09-20",
+      "time": "17:00",
+      "type": "Appointment requested in Messages",
+      "facility": "City Care Hospital",
+      "notes": "Booked from Messages: Book on 20-09-2026",
+      "status": "scheduled",
+      "created_at": "2026-09-20T10:42:03.143199Z",
+      "booked_at": "2026-09-20T10:42:03.143441Z",
+      "email_sent": false,
+      "email_mode": "demo",
+      "journey_id": "j1",
+      "source": "messages",
+      "message_id": "598166e5-e4be-49c1-ad33-bceb174927e6",
+      "reminder_sent": true,
+      "reminder_at": "2026-09-20T10:42:18.207351Z"
+    },
+    {
+      "id": "5c7bda0b-0718-4d67-b80d-9f05d7b32a6e",
       "patient_name": "Meera Patel",
       "email": "meera@example.com",
       "date": "2026-09-22",
@@ -422,13 +402,74 @@
       "facility": "City Care Hospital",
       "notes": "Fasting required",
       "status": "scheduled",
-      "created_at": "2026-09-20T03:58:06.850222Z",
+      "created_at": "2026-09-20T10:38:56.797080Z",
       "email_sent": false,
       "email_mode": "demo",
       "journey_id": "j1"
+    },
+    {
+      "id": "5b543995-29a6-4d29-8cec-e36d21d706ac",
+      "patient_name": "Ramesh Kumar",
+      "email": "ramesh@example.com",
+      "date": "2026-09-06",
+      "time": "15:30",
+      "type": "Eye follow-up review",
+      "facility": "Vision Plus Clinic",
+      "notes": "Follow-up was not attended. Please call the clinic to reschedule.",
+      "status": "missed",
+      "created_at": "2026-09-20T10:38:56.797080Z",
+      "email_sent": false,
+      "email_mode": "demo",
+      "journey_id": "j2"
     }
   ],
-  "notifications": [],
+  "notifications": [
+    {
+      "id": "e78f76d5-d6f5-420f-a3f0-a68fe467fab1",
+      "appointment_id": "39f58dda-626e-47e1-a7f3-4cdd8d41361e",
+      "type": "appointment_reminder_email",
+      "message": "Hi Meera Patel,\n\nThis is a friendly reminder about your upcoming appointment:\n\n  Type:     Appointment requested in Messages\n  Facility: City Care Hospital\n  Date:     2026-09-20\n  Time:     17:00\n  Notes:    Booked from Messages: Book on 20-09-2026\n\nPlease arrive 10 minutes early. Reply if you need to reschedule.\n\n\u2014 CareLink Team\n",
+      "to": "meera@example.com",
+      "status": "sent",
+      "created_at": "2026-09-20T10:42:18.207504Z",
+      "details": {
+        "ok": true,
+        "status": "sent",
+        "mode": "smtp",
+        "to": "meera@example.com",
+        "booking_timestamp": "2026-09-20T10:42:03.143441Z",
+        "seconds_until_appointment": 22666
+      }
+    },
+    {
+      "id": "539c6670-75ad-4ac8-8096-ec5be0cf0b5b",
+      "type": "chat_reply_email",
+      "message": "Your appointment is booked for 2026-09-20 at 17:00 at City Care Hospital. Calendar & Book has been updated automatically. You can reschedule by sending another date in DD-MM-YYYY format.",
+      "to": "meera@example.com",
+      "status": "sent",
+      "created_at": "2026-09-20T10:42:12.063998Z",
+      "details": {
+        "ok": true,
+        "status": "sent",
+        "mode": "smtp",
+        "to": "meera@example.com"
+      }
+    },
+    {
+      "id": "b406d9e9-f8ba-433c-bc7a-b9987b0b466c",
+      "type": "message_booking_email",
+      "message": "Hi Meera Patel,\n\nYour appointment is confirmed:\n\n  Type:     Appointment requested in Messages\n  Facility: City Care Hospital\n  Date:     2026-09-20\n  Time:     17:00\n  Notes:    Booked from Messages: Book on 20-09-2026\n\nPlease arrive 10 minutes early.\n\n\u2014 CareLink Team\n",
+      "to": "meera@example.com",
+      "status": "sent",
+      "created_at": "2026-09-20T10:42:07.481485Z",
+      "details": {
+        "ok": true,
+        "status": "sent",
+        "mode": "smtp",
+        "to": "meera@example.com"
+      }
+    }
+  ],
   "reports": [],
   "hospitals": [
     {
@@ -474,7 +515,7 @@
       "date": "2026-09-10",
       "notes": "Shared from City Care EMR",
       "file_id": null,
-      "created_at": "2026-09-20T03:58:06.850222Z"
+      "created_at": "2026-09-20T10:38:56.797080Z"
     },
     {
       "id": "er2",
@@ -487,7 +528,7 @@
       "date": "2026-08-21",
       "notes": "Imported from Vision Plus",
       "file_id": null,
-      "created_at": "2026-08-31T03:58:06.850222Z"
+      "created_at": "2026-08-31T10:38:56.797080Z"
     }
   ],
   "role": "patient",

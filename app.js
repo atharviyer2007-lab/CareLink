@@ -13,6 +13,10 @@ let state = {
   stages: [], reports: [], hospitals: [], external_records: [], role: "patient", acting_patient_id: "p1",
   activeJourneyId: null, selectedDate: null,
   calYear: null, calMonth: null, calendarDays: {},
+  consentGranted: false,
+  pendingFetchQuery: null,
+  lastFetchedQuery: null,
+  accessLog: [],
 };
 
 function toast(msg, ms = 3000) {
@@ -41,6 +45,26 @@ function toDateStr(y, m, d) {
   return `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
 }
 
+function formatLocalDateTime(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+}
+
+function updateCurrentClock() {
+  const clock = $("#current-clock");
+  if (!clock) return;
+  const now = new Date();
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local time";
+  const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  clock.textContent = `${time} · ${timeZone}`;
+  clock.title = `Current time: ${now.toLocaleString()} (${timeZone})`;
+}
+
+updateCurrentClock();
+setInterval(updateCurrentClock, 1000);
+
 function patientById(id) { return state.patients.find((p) => p.id === id); }
 function journeyById(id) { return state.journeys.find((j) => j.id === id); }
 
@@ -61,11 +85,162 @@ $$(".tab").forEach((btn) => {
     $$(".tab-panel").forEach((p) => p.classList.add("hidden"));
     $(`#tab-${btn.dataset.tab}`).classList.remove("hidden");
     if (btn.dataset.tab === "passport") renderPassport();
+    if (btn.dataset.tab === "analytics") renderAnalytics();
     if (btn.dataset.tab === "messages") renderMessages();
     if (btn.dataset.tab === "verify") renderVerify();
     if (btn.dataset.tab === "calendar") { loadCalendar(); renderAppointments(); renderNotifications(); }
+    if (btn.dataset.tab === "dashboard") renderDashboard();
+    // Soft-clear strip emphasis when user opens dashboard
+    if (btn.dataset.tab === "dashboard") {
+      const strip = $("#tab-notify-strip");
+      if (strip && computeStuckJourneys().length === 0) strip.classList.add("hidden");
+    }
+    updateTabBadgesAndTitle();
   });
 });
+
+async function loadAccessLog() {
+  try {
+    const res = await api("/api/access-log?limit=20");
+    state.accessLog = res.entries || [];
+  } catch (_) {
+    state.accessLog = [];
+  }
+}
+
+function renderAccessLog() {
+  const list = $("#access-log-list");
+  const count = $("#access-count");
+  if (!list) return;
+  if (count) count.textContent = state.accessLog.length;
+  list.innerHTML = state.accessLog.length
+    ? state.accessLog.map((e) => `
+        <div class="access-item">
+          <div>${esc(e.actor)} ${esc(e.action)}${e.subject ? " — " + esc(e.subject) : ""}</div>
+          <div class="meta">${esc(e.relative || "")}</div>
+        </div>`).join("")
+    : `<p class="empty">No access events yet — fetch a patient or open a report</p>`;
+}
+
+/** Stuck = open journey with overdue/blocked, or pending stage older than ~7 days (from created_at). */
+function computeStuckJourneys() {
+  const STUCK_DAYS = 7;
+  const now = Date.now();
+  const out = [];
+  state.journeys.filter((j) => j.status === "open").forEach((j) => {
+    const p = patientById(j.patient_id);
+    let worst = null;
+    Object.entries(j.stages || {}).forEach(([sid, st]) => {
+      if (!st || !["overdue", "blocked", "pending"].includes(st.status)) return;
+      const label = state.stages.find((s) => s.id === sid)?.label || sid;
+      const updated = st.updated_at ? Date.parse(st.updated_at) : null;
+      const created = j.created_at ? Date.parse(j.created_at) : null;
+      const base = updated || created || now;
+      const days = Math.max(0, Math.floor((now - base) / 86400000));
+      const isStuck =
+        st.status === "overdue" ||
+        st.status === "blocked" ||
+        (st.status === "pending" && days >= STUCK_DAYS);
+      if (!isStuck) return;
+      if (!worst || ({ overdue: 0, blocked: 1, pending: 2 }[st.status] < { overdue: 0, blocked: 1, pending: 2 }[worst.status])) {
+        worst = { stage: label, status: st.status, days, note: st.note || "" };
+      }
+    });
+    if (worst) {
+      out.push({ journey: j, patient: p, ...worst });
+    }
+  });
+  out.sort((a, b) => {
+    const rank = { overdue: 0, blocked: 1, pending: 2 };
+    return (rank[a.status] - rank[b.status]) || (b.days - a.days);
+  });
+  return out;
+}
+
+function setBadge(id, n, soft) {
+  const el = $(id);
+  if (!el) return;
+  if (n > 0) {
+    el.textContent = n > 9 ? "9+" : String(n);
+    el.classList.remove("hidden");
+    if (soft) el.classList.add("soft");
+    else el.classList.remove("soft");
+  } else {
+    el.classList.add("hidden");
+  }
+}
+
+function updateTabBadgesAndTitle() {
+  const stuck = computeStuckJourneys();
+  const overdueBlocked = stuck.filter((s) => s.status === "overdue" || s.status === "blocked").length;
+  const msgCount = (state.messages || []).filter((m) => m.from === "patient").length;
+  // Unread-ish: patient messages without a later system reply is heavy; show recent patient msgs count capped
+  const notifCount = (state.notifications || []).length;
+  const verifyNeeded = state.journeys.filter((j) =>
+    Object.values(j.stages || {}).some((st) => st && st.status === "pending" && st.verification === "none")
+  ).length;
+
+  setBadge("#badge-dashboard", stuck.length);
+  setBadge("#badge-messages", Math.min(msgCount, 9), true);
+  setBadge("#badge-calendar", notifCount, true);
+  setBadge("#badge-verify", verifyNeeded);
+
+  const strip = $("#tab-notify-strip");
+  if (strip) {
+    if (stuck.length > 0) {
+      strip.classList.remove("hidden");
+      const names = stuck.slice(0, 2).map((s) => s.patient?.name || "Patient").join(", ");
+      strip.innerHTML = `<strong>${stuck.length} stuck referral${stuck.length > 1 ? "s" : ""}</strong> — ${esc(names)}${stuck.length > 2 ? "…" : ""}. Open Dashboard to act.`;
+    } else if (notifCount > 0) {
+      strip.classList.remove("hidden");
+      strip.innerHTML = `<strong>${notifCount} notification${notifCount > 1 ? "s" : ""}</strong> — check Calendar & Book.`;
+    } else {
+      strip.classList.add("hidden");
+      strip.innerHTML = "";
+    }
+  }
+
+  // Browser tab title so user is notified even on another tab
+  const base = "CareLink — Care Passport";
+  if (stuck.length > 0) {
+    document.title = `(${stuck.length}) Stuck · ${base}`;
+  } else if (notifCount > 0) {
+    document.title = `(${notifCount}) ${base}`;
+  } else {
+    document.title = base;
+  }
+}
+
+function renderStuckBanner() {
+  const banner = $("#stuck-banner");
+  const title = $("#stuck-title");
+  const detail = $("#stuck-detail");
+  const list = $("#stuck-list");
+  if (!banner) return;
+  const stuck = computeStuckJourneys();
+  if (!stuck.length) {
+    banner.classList.add("hidden");
+    return;
+  }
+  banner.classList.remove("hidden");
+  if (title) title.textContent = `⚠ ${stuck.length} stuck referral${stuck.length > 1 ? "s" : ""} — care journey incomplete`;
+  if (detail) {
+    detail.textContent =
+      "Referral leakage risk: overdue, blocked, or pending >7 days without progress. This is the core problem CareLink tracks.";
+  }
+  if (list) {
+    list.innerHTML = stuck.slice(0, 5).map((s) => {
+      const why =
+        s.status === "overdue"
+          ? `overdue · ${s.days}d`
+          : s.status === "blocked"
+            ? `blocked · ${s.days}d`
+            : `pending · ${s.days}d`;
+      return `<li><strong>${esc(s.patient?.name || "Patient")}</strong> — ${esc(s.journey.title)} · ${esc(s.stage)}
+        <span class="days">(${esc(why)})</span>${s.note ? " — " + esc(s.note) : ""}</li>`;
+    }).join("");
+  }
+}
 
 function renderDashboard() {
   const open = state.journeys.filter((j) => j.status === "open");
@@ -77,13 +252,17 @@ function renderDashboard() {
     });
   });
   const closed = state.journeys.filter((j) => j.status === "closed").length;
+  const stuck = computeStuckJourneys();
 
   $("#metrics").innerHTML = `
     <div class="metric"><div class="k">${open.length}</div><div class="v">open journeys</div></div>
     <div class="metric"><div class="k ${overdue ? "danger" : ""}">${overdue}</div><div class="v">overdue stages</div></div>
     <div class="metric"><div class="k ${blocked ? "danger" : ""}">${blocked}</div><div class="v">blocked</div></div>
-    <div class="metric"><div class="k">${closed}</div><div class="v">closed passports</div></div>
+    <div class="metric"><div class="k ${stuck.length ? "danger" : ""}">${stuck.length}</div><div class="v">stuck referrals</div></div>
   `;
+  renderStuckBanner();
+  renderAccessLog();
+  updateTabBadgesAndTitle();
 
   $("#journey-count").textContent = state.journeys.length;
   const list = $("#journey-list");
@@ -140,6 +319,64 @@ function renderDashboard() {
   `).join("") || `<p class="empty">No pending actions</p>`;
 }
 
+async function renderAnalytics() {
+  const metrics = $("#analytics-metrics");
+  if (!metrics) return;
+  metrics.innerHTML = `<div class="metric"><div class="k">…</div><div class="v">loading analytics</div></div>`;
+  try {
+    const data = await api("/api/analytics");
+    const o = data.overall || {};
+    metrics.innerHTML = `
+      <div class="metric"><div class="k">${esc(o.adherence_rate)}%</div><div class="v">stage adherence</div></div>
+      <div class="metric"><div class="k ${o.missed_followups ? "danger" : ""}">${esc(o.missed_followups)}</div><div class="v">missed follow-ups</div></div>
+      <div class="metric"><div class="k ${o.overdue_stages ? "danger" : ""}">${esc(o.overdue_stages)}</div><div class="v">overdue actions</div></div>
+      <div class="metric"><div class="k ${o.at_risk_patients ? "danger" : ""}">${esc(o.at_risk_patients)}</div><div class="v">patients needing attention</div></div>`;
+    const hospitals = $("#analytics-hospitals");
+    hospitals.innerHTML = `<div class="analytics-row analytics-row-head"><span>Hospital</span><span>Adherence</span><span>Missed</span></div>` + (data.hospitals || []).map((h) => `
+      <div class="analytics-row"><span><strong>${esc(h.hospital)}</strong><small>${esc(h.patients)} patients · ${esc(h.journeys)} journeys</small></span><span><b>${esc(h.adherence_rate)}%</b><i class="analytics-bar"><em style="width:${Math.max(0, Math.min(100, Number(h.adherence_rate) || 0))}%"></em></i></span><span class="analytics-number ${h.missed_followups ? "bad" : "good"}">${esc(h.missed_followups)}</span></div>`).join("") || `<p class="empty">No hospital journey data yet.</p>`;
+    const missed = $("#analytics-missed");
+    $("#analytics-missed-count").textContent = String((data.missed_followups || []).length);
+    missed.innerHTML = (data.missed_followups || []).map((a) => `<div class="alert-item"><div class="analytics-item-head"><strong>${esc(a.patient)}</strong><span class="tag overdue">${esc(a.status)}</span></div><div class="meta">${esc(a.type)} · ${esc(a.hospital)} · ${esc(a.date)}</div><div class="meta">${esc(a.notes)}</div></div>`).join("") || `<p class="empty">No missed follow-ups found.</p>`;
+    const risk = $("#analytics-risk");
+    $("#analytics-risk-count").textContent = String((data.at_risk || []).length);
+    risk.innerHTML = (data.at_risk || []).map((x) => `<article class="analytics-risk-item"><div class="analytics-item-head"><strong>${esc(x.patient)}</strong><span class="meta">${esc(x.facility)}</span></div><div class="meta">${esc(x.journey)}</div><ul>${(x.items || []).map((i) => `<li><b>${esc(i.kind)}</b>: ${esc(i.note)}</li>`).join("")}</ul></article>`).join("") || `<p class="empty">No overdue or blocked journeys.</p>`;
+    const updated = $("#analytics-updated");
+    if (updated) updated.textContent = data.generated_at ? `updated ${new Date(data.generated_at).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}` : "updated";
+  } catch (error) {
+    metrics.innerHTML = `<div class="analytics-error">Analytics could not be loaded: ${esc(error.message)}</div>`;
+  }
+}
+
+$("#btn-refresh-analytics")?.addEventListener("click", renderAnalytics);
+
+let patientReportRequest = 0;
+
+async function renderPatientCareUpdate(journeyId) {
+  const box = $("#patient-care-update");
+  if (!box) return;
+  const requestId = ++patientReportRequest;
+  box.innerHTML = `<div class="patient-care-loading">Preparing a simple care update…</div>`;
+  try {
+    const res = await api(`/api/patient-report/${encodeURIComponent(journeyId)}`);
+    if (requestId !== patientReportRequest || state.activeJourneyId !== journeyId) return;
+    const report = res.report;
+    const list = (items, empty) => items?.length ? `<ul>${items.map((x) => `<li><strong>${esc(x.title || x.stage || x.name)}</strong>${x.source ? ` · ${esc(x.source)}` : ""}${x.status ? ` <span class="tag ${esc(x.status)}">${esc(x.status)}</span>` : ""}<br><span>${esc(x.detail || x.note || x.plain || "")}</span>${x.url ? ` <a href="${esc(x.url)}" target="_blank" rel="noopener">Official link</a>` : ""}</li>`).join("")}</ul>` : `<p class="muted">${esc(empty)}</p>`;
+    box.innerHTML = `
+      <div class="patient-care-head"><div><div class="eyebrow">For the patient and family</div><h3>What happened and what to do next</h3><p class="muted">Simple words, updated from the latest Care Passport records.</p></div><span class="tag done">updated</span></div>
+      <div class="patient-care-grid">
+        <section><h4>What happened</h4>${list(report.what_happened, "No examination record has been added yet.")}</section>
+        <section><h4>Next steps</h4>${list(report.next_steps, "Your care team will add the next step.")}</section>
+        <section class="attention"><h4>Missed or needs attention</h4>${list(report.missed_actions, "Nothing is marked missed right now.")}</section>
+        <section><h4>Government health information</h4>${list(report.scheme_updates, "No scheme information is available.")}</section>
+      </div>
+      <div class="patient-news"><h4>Official updates and news</h4>${list(report.news_updates, "Check official sources for the latest updates.")}</div>
+      <p class="patient-disclaimer">${esc(report.disclaimer)}</p>
+    `;
+  } catch (error) {
+    if (requestId === patientReportRequest) box.innerHTML = `<div class="patient-care-error">We could not prepare the simple care update right now. Your Care Passport data is still available below.</div>`;
+  }
+}
+
 function renderPassport() {
   const sel = $("#passport-journey");
   sel.innerHTML = state.journeys.map((j) => {
@@ -159,11 +396,24 @@ function renderPassport() {
     return;
   }
   const p = patientById(j.patient_id);
+  renderPatientCareUpdate(j.id);
   $("#passport-header").innerHTML = `
-    <h3>${esc(p?.name)}</h3>
-    <div class="meta">${esc(j.title)} · ${esc(j.facility)} · ${esc(p?.condition || "")}</div>
-    <div class="meta" style="margin-top:.35rem"><span class="tag ${j.status}">${j.status}</span></div>
+    <div class="passport-heading-row">
+      <div>
+        <h3>${esc(p?.name)}</h3>
+        <div class="meta">${esc(j.title)} · ${esc(j.facility)} · ${esc(p?.condition || "")}</div>
+        <div class="meta" style="margin-top:.35rem"><span class="tag ${j.status}">${j.status}</span></div>
+      </div>
+      <div class="summary-actions" aria-label="Care summary actions">
+        <button type="button" class="btn ghost small" id="btn-print-summary">Print specialist brief</button>
+        <button type="button" class="btn primary small" id="btn-download-summary">Download report</button>
+      </div>
+    </div>
+    <div class="summary-hint">One-page visit story · includes CareLink, hospital network, and uploaded records</div>
   `;
+
+  $("#btn-print-summary")?.addEventListener("click", () => openCareSummary(j, "print"));
+  $("#btn-download-summary")?.addEventListener("click", () => openCareSummary(j, "download"));
 
   $("#passport-stages").innerHTML = state.stages.map((s, i) => {
     const st = j.stages[s.id] || { status: "locked" };
@@ -213,7 +463,7 @@ function renderPassport() {
           body: JSON.stringify({ stage_id: stageId, status, verification, note, notify_email: true }),
         });
         if (status === "failed" || status === "blocked") {
-          toast(res.email?.ok ? "Updated & email sent to patient" : "Updated (email demo/failed)");
+          toast(res.email?.ok ? "Updated & patient notified (SMS/email)" : "Updated (notification demo/failed)");
         } else {
           toast("Stage updated");
         }
@@ -287,6 +537,47 @@ function renderReportsForJourney(journeyId) {
     : `<p class="empty">No reports uploaded yet</p>`;
 }
 
+function formatSummaryDate(value) {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function buildSpecialistBrief(journey) {
+  const patient = patientById(journey.patient_id) || {};
+  const records = (state.external_records || []).filter((r) => r.journey_id === journey.id || r.patient_id === journey.patient_id);
+  const files = (state.reports || []).filter((r) => r.journey_id === journey.id);
+  const appointments = (state.appointments || []).filter((a) => a.journey_id === journey.id || a.patient_name === patient.name).slice(0, 6);
+  const stageRows = state.stages.map((stage) => {
+    const item = journey.stages?.[stage.id] || { status: "locked" };
+    return `<div class="story-row"><span class="story-step"><b>${esc(stage.label)}</b><small>${item.verification && item.verification !== "none" ? `Verified: ${esc(item.verification)}` : "Care Passport stage"}</small></span><span class="story-status ${esc(item.status)}">${esc(item.status)}</span><span class="story-note">${esc(item.note || "")}</span></div>`;
+  }).join("");
+  const recordRows = records.length ? records.slice(0, 10).map((r) => `<div class="record-row"><span><b>${esc(r.title || "Untitled record")}</b><small>${esc(r.record_type || "Record")} · ${esc(r.hospital_name || "CareLink")}</small></span><span>${esc(formatSummaryDate(r.date))}${r.file_id ? ` · <a href="${location.origin}/api/reports/file/${encodeURIComponent(r.file_id)}">Open file</a>` : ""}</span></div>`).join("") : `<p class="empty">No linked hospital records yet.</p>`;
+  const fileRows = files.length ? files.slice(0, 6).map((r) => `<div class="record-row"><span><b>${esc(r.filename)}</b><small>${esc(r.note || "Uploaded report")}</small></span><a href="${location.origin}/api/reports/file/${encodeURIComponent(r.id)}">Open file</a></div>`).join("") : `<p class="empty">No uploaded files yet.</p>`;
+  const appointmentRows = appointments.length ? appointments.map((a) => `<div class="record-row"><span><b>${esc(a.type || "Visit")}</b><small>${esc(a.facility || "CareLink")}</small></span><span>${esc(formatSummaryDate(a.date))} · ${esc(a.time || "")}</span></div>`).join("") : `<p class="empty">No appointment recorded.</p>`;
+  const generated = new Date().toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>CareLink Specialist Brief — ${esc(patient.name)}</title><style>@page{size:A4;margin:12mm}*{box-sizing:border-box}body{font:10.5pt Arial,sans-serif;color:#10231f;margin:0;line-height:1.35}h1,h2,h3,p{margin:0}a{color:#087f75}.sheet{max-width:780px;margin:auto}.top{display:flex;justify-content:space-between;gap:20px;border-bottom:3px solid #0d9488;padding-bottom:14px;margin-bottom:14px}.eyebrow{text-transform:uppercase;letter-spacing:.14em;color:#0d9488;font-size:8pt;font-weight:700}.brand{font-size:24pt;font-weight:800;letter-spacing:-.04em}.sub{color:#52706a;margin-top:3px}.stamp{text-align:right;color:#52706a;font-size:8.5pt}.patient{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:10px;background:#eef8f5;border-radius:10px;padding:12px;margin-bottom:12px}.label{display:block;text-transform:uppercase;letter-spacing:.08em;font-size:7.5pt;color:#64837c;font-weight:700}.value{font-size:12pt;font-weight:700}.section{margin-top:12px}.section h2{font-size:12pt;margin-bottom:6px}.story,.record-list{border:1px solid #d6e6e1;border-radius:9px;overflow:hidden}.story-row,.record-row{display:grid;grid-template-columns:1.1fr auto 1.5fr;gap:10px;align-items:center;padding:7px 9px;border-bottom:1px solid #e6efec}.story-row:last-child,.record-row:last-child{border-bottom:0}.story-step small,.record-row small{display:block;color:#6a857e;font-size:8.5pt}.story-status{font-size:7.5pt;text-transform:uppercase;font-weight:800;padding:3px 6px;border-radius:5px;background:#edf2f1;color:#526962}.story-status.done{background:#d5f5e7;color:#087153}.story-status.pending,.story-status.overdue,.story-status.blocked{background:#fff0d2;color:#a25c00}.story-note{color:#526962;font-size:9pt}.record-row{grid-template-columns:1fr auto}.record-row span:last-child{color:#526962;font-size:9pt;text-align:right}.empty{color:#78918a;padding:10px}.footer{margin-top:16px;border-top:1px solid #d6e6e1;padding-top:8px;color:#6a857e;font-size:8pt;display:flex;justify-content:space-between}.print-tools{display:flex;gap:8px;margin-bottom:12px}@media print{.print-tools{display:none}.sheet{max-width:none}}</style></head><body><main class="sheet"><div class="print-tools"><button onclick="window.print()">Print / Save as PDF</button><button onclick="window.close()">Close</button></div><header class="top"><div><div class="eyebrow">CareLink · Specialist visit story</div><div class="brand">Care summary</div><div class="sub">A concise handoff for the next clinician</div></div><div class="stamp">Generated<br>${esc(generated)}<br><b>${esc(journey.facility || "CareLink")}</b></div></header><section class="patient"><div><span class="label">Patient</span><span class="value">${esc(patient.name || "Patient")}</span></div><div><span class="label">Contact</span><span class="value">${esc(patient.email || "—")}</span></div><div><span class="label">Reason for care</span><span class="value">${esc(patient.condition || journey.title || "—")}</span></div></section><section class="section"><h2>Journey at a glance</h2><div class="story">${stageRows}</div></section><section class="section"><h2>Visits & appointments</h2><div class="record-list">${appointmentRows}</div></section><section class="section"><h2>Records from CareLink & linked hospitals</h2><div class="record-list">${recordRows}</div></section><section class="section"><h2>Uploaded report files</h2><div class="record-list">${fileRows}</div></section><footer class="footer"><span>Consent-based sharing is simulated in this demo. Verify clinical details with the source facility.</span><span>CareLink · ${esc(journey.title || "Care Passport")}</span></footer></main></body></html>`;
+}
+
+function openCareSummary(journey, mode = "print") {
+  const html = buildSpecialistBrief(journey);
+  if (mode === "download") {
+    const patient = patientById(journey.patient_id) || {};
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `carelink-specialist-brief-${(patient.name || "patient").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.html`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    toast("Specialist report downloaded");
+    return;
+  }
+  const win = window.open("", "carelink-specialist-brief", "width=920,height=900");
+  if (!win) { toast("Allow pop-ups to print the brief"); return; }
+  win.document.write(html); win.document.close(); win.focus();
+  setTimeout(() => win.print(), 350);
+}
+
 function renderMessages() {
   const threads = $("#thread-list");
   threads.innerHTML = state.journeys.map((j) => {
@@ -330,13 +621,23 @@ function renderMessages() {
 async function sendChat(text) {
   if (!state.activeJourneyId || !text?.trim()) return;
   try {
-    await api("/api/messages", {
+    const result = await api("/api/messages", {
       method: "POST",
-      body: JSON.stringify({ journey_id: state.activeJourneyId, body: text.trim(), from: "patient" }),
+      body: JSON.stringify({
+        journey_id: state.activeJourneyId,
+        body: text.trim(),
+        from: "patient",
+        client_now: new Date().toISOString(),
+        client_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+      }),
     });
     $("#chat-input").value = "";
     await refresh();
     renderMessages();
+    await loadCalendar();
+    renderCalendar();
+    renderAppointments();
+    if (result.booking) toast(`Calendar updated: ${result.booking.date} at ${result.booking.time} · booked ${formatLocalDateTime(result.booking.created_at)}`);
   } catch (e) {
     toast("Error: " + e.message);
   }
@@ -455,9 +756,11 @@ function renderAppointments() {
         </div>
         <span class="tag ${a.status}">${a.status}</span>
       </div>
-      <div class="meta">📅 ${a.date} · 🕒 ${a.time} ${a.email_sent ? "· ✅ Email" : ""} ${a.email_mode === "demo" ? "(demo)" : ""}</div>
+      <div class="meta">📅 ${a.date} · 🕒 ${a.time} ${a.email_sent ? "· ✅ Patient notified" : ""} ${a.email_mode === "demo" ? "(SMS demo)" : ""}</div>
+      <div class="meta booking-time">Booked at ${esc(formatLocalDateTime(a.created_at || a.booked_at))}</div>
+      ${a.specialist_email ? `<div class="meta">✉ Specialist brief: ${esc(a.specialist_name || a.specialist_email)} · ${a.specialist_summary_sent ? "✅ sent" : "scheduled before visit"}</div>` : ""}
       <div class="stage-actions">
-        <button class="btn small ghost" data-act="notify">Resend Email</button>
+        <button class="btn small ghost" data-act="notify">Resend SMS/Email</button>
         <button class="btn small ghost" data-act="done">Mark Done</button>
       </div>
     </article>
@@ -469,7 +772,7 @@ function renderAppointments() {
       try {
         if (btn.dataset.act === "notify") {
           await api(`/api/appointments/${id}/notify`, { method: "POST" });
-          toast("Email resent");
+          toast("Notification resent");
         } else {
           await api(`/api/appointments/${id}`, { method: "PATCH", body: JSON.stringify({ status: "completed" }) });
           toast("Marked done");
@@ -512,10 +815,10 @@ $("#appt-form")?.addEventListener("submit", async (e) => {
     const res = await api("/api/appointments", { method: "POST", body: JSON.stringify(payload) });
     msg.className = "form-msg success";
     msg.textContent = res.email?.mode === "demo"
-      ? "✅ Booked. Email logged (demo). Use ⚙️ Setup for live email."
+      ? (payload.specialist_email ? "✅ Booked. Patient notification is demo-logged; specialist brief is scheduled for the pre-visit automation." : "✅ Booked. 📱 SMS/WhatsApp notification logged (demo).")
       : res.email?.ok
-        ? "✅ Booked & email sent!"
-        : "✅ Booked (email failed — check Setup)";
+        ? (payload.specialist_email ? "✅ Booked & patient notification sent. Specialist brief scheduled for the pre-visit window." : "✅ Booked & notification sent!")
+        : "✅ Booked (notification failed — check Setup)";
     msg.classList.remove("hidden");
     e.target.reset();
     setDefaults();
@@ -647,16 +950,32 @@ async function refresh() {
   state.acting_patient_id = data.acting_patient_id;
   $("#role-select").value = state.role;
   await updateEmailStatus();
+  await loadAccessLog();
 }
 
 function renderAll() {
   renderDashboard();
+  if (document.querySelector(".tab.active")?.dataset?.tab === "analytics") renderAnalytics();
   renderPassport();
   renderMessages();
   renderVerify();
   renderAppointments();
   renderNotifications();
+  updateTabBadgesAndTitle();
 }
+
+$("#btn-demo-fetch")?.addEventListener("click", () => {
+  $$(".tab").forEach((t) => t.classList.remove("active"));
+  $$('.tab[data-tab="fetch"]').classList.add("active");
+  $$(".tab-panel").forEach((p) => p.classList.add("hidden"));
+  $("#tab-fetch")?.classList.remove("hidden");
+  const input = $("#fetch-query");
+  if (input) {
+    input.value = "Meera Patel";
+    input.focus();
+  }
+  toast("Demo: search Meera Patel → OTP 1234");
+});
 
 (async function init() {
   initCal();
@@ -675,12 +994,13 @@ $("#add-patient-form")?.addEventListener("submit", async (e) => {
   payload.start_journey = true;
   const msg = $("#add-patient-msg");
   try {
-    await api("/api/patients", { method: "POST", body: JSON.stringify(payload) });
+    const created = await api("/api/patients", { method: "POST", body: JSON.stringify(payload) });
     msg.className = "form-msg success";
     msg.textContent = "✅ Person added and Care Passport started.";
     msg.classList.remove("hidden");
     e.target.reset();
     await refresh();
+    if (created.journey_id) state.activeJourneyId = created.journey_id;
     renderAll();
     toast("Person added");
   } catch (err) {
@@ -713,7 +1033,7 @@ $("#report-upload-form")?.addEventListener("submit", async (e) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || res.statusText);
     msg.className = "form-msg success";
-    msg.textContent = data.email?.ok ? "✅ Report uploaded & patient emailed" : "✅ Report uploaded";
+    msg.textContent = data.email?.ok ? "✅ Report uploaded & patient notified (SMS/email)" : "✅ Report uploaded";
     msg.classList.remove("hidden");
     fileInput.value = "";
     if ($("#report-note")) $("#report-note").value = "";
@@ -766,7 +1086,7 @@ $("#external-record-form")?.addEventListener("submit", async (e) => {
     if (!res.ok) throw new Error(data.error || res.statusText);
     msg.className = "form-msg success";
     msg.textContent = data.email?.ok
-      ? "✅ Hospital record added & patient emailed"
+      ? "✅ Hospital record added & patient notified"
       : "✅ Hospital record added";
     msg.classList.remove("hidden");
     e.target.reset();
@@ -781,15 +1101,29 @@ $("#external-record-form")?.addEventListener("submit", async (e) => {
 });
 
 
-$("#fetch-form")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const query = $("#fetch-query")?.value.trim();
+function showConsentModal(query) {
+  state.pendingFetchQuery = query;
+  state.consentGranted = false;
+  const modal = $("#consent-modal");
+  const otp = $("#consent-otp");
+  const err = $("#consent-error");
+  if (err) err.classList.add("hidden");
+  if (otp) otp.value = "";
+  modal?.classList.remove("hidden");
+  setTimeout(() => otp?.focus(), 50);
+}
+
+function hideConsentModal() {
+  $("#consent-modal")?.classList.add("hidden");
+  state.pendingFetchQuery = null;
+}
+
+async function runFetchPatient(query, silent = false) {
   const msg = $("#fetch-msg");
   const progress = $("#fetch-progress");
   const bar = $("#fetch-bar-inner");
   const ptext = $("#fetch-progress-text");
   const results = $("#fetch-results");
-  if (!query) return;
 
   msg.classList.add("hidden");
   results.classList.add("hidden");
@@ -814,9 +1148,10 @@ $("#fetch-form")?.addEventListener("submit", async (e) => {
   }, 280);
 
   try {
+    const actor = ($("#role-select")?.value || "Care Team");
     const res = await api("/api/fetch-patient", {
       method: "POST",
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, actor: actor === "doctor" ? "Dr. Mehta" : actor === "asha" ? "ASHA worker" : "Care Team" }),
     });
     clearInterval(tick);
     bar.style.width = "100%";
@@ -824,6 +1159,7 @@ $("#fetch-form")?.addEventListener("submit", async (e) => {
     setTimeout(() => progress.classList.add("hidden"), 400);
 
     const s = res.summary;
+    state.lastFetchedQuery = query;
     const p = s.patient;
     let html = `
       <div class="card">
@@ -873,7 +1209,7 @@ $("#fetch-form")?.addEventListener("submit", async (e) => {
         </div>
       </div>
       <div class="card" style="margin-top:1rem">
-        <h2>Live hospital network response</h2>
+        <h2>Consent-based sync (ABDM-style, simulated for demo)</h2>
         <div class="list">
           ${(s.network_hits || []).map((hit) => {
             if (hit.error) return `<div class="appt-item"><div class="name">⚠ ${esc(hit.hospital_key || "hospital")}</div><div class="meta">${esc(hit.error)} — is hospital network running on :5001?</div></div>`;
@@ -883,7 +1219,7 @@ $("#fetch-form")?.addEventListener("submit", async (e) => {
             return `<div class="appt-item"><div class="name">🏥 ${esc(hp.name)} <span class="tag done">linked</span></div>
               <div class="meta">${esc(hp.city)} · ${esc(hp.phone || "")}</div>
               <div class="meta">${reps || "Visits found"}</div></div>`;
-          }).join("") || '<p class="empty">Start hospital network on port 5001 to query live sites</p>'}
+          }).join("") || '<p class="empty">Start hospital network on port 5001 to query sites</p>'}
         </div>
       </div>
       <div class="card" style="margin-top:1rem">
@@ -915,13 +1251,66 @@ $("#fetch-form")?.addEventListener("submit", async (e) => {
       });
     });
 
-    toast("Records fetched");
+    await loadAccessLog();
+    renderAccessLog();
+    if (!silent) toast("Records fetched (consent granted)");
   } catch (err) {
     clearInterval(tick);
     progress.classList.add("hidden");
     msg.className = "form-msg error";
     msg.textContent = err.message;
     msg.classList.remove("hidden");
+  }
+}
+
+$("#fetch-form")?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const query = $("#fetch-query")?.value.trim();
+  if (!query) return;
+  // Consent gate: do not call API / show results until UI consent is granted
+  showConsentModal(query);
+});
+
+function showConsentReceipt(query) {
+  const id = "CL-DEMO-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+  const el = $("#consent-receipt");
+  const text = $("#consent-receipt-text");
+  if (text) {
+    text.textContent = ` ID ${id} · patient “${query || "—"}” · purpose: specialist review · valid 24h (simulated)`;
+  }
+  el?.classList.remove("hidden");
+  clearTimeout(el?._t);
+  if (el) el._t = setTimeout(() => el.classList.add("hidden"), 12000);
+}
+
+$("#consent-receipt-dismiss")?.addEventListener("click", () => {
+  $("#consent-receipt")?.classList.add("hidden");
+});
+
+$("#consent-grant")?.addEventListener("click", () => {
+  const otp = ($("#consent-otp")?.value || "").trim();
+  const err = $("#consent-error");
+  if (!/^\d{4}$/.test(otp)) {
+    err?.classList.remove("hidden");
+    return;
+  }
+  err?.classList.add("hidden");
+  state.consentGranted = true;
+  const q = state.pendingFetchQuery;
+  hideConsentModal();
+  showConsentReceipt(q);
+  if (q) runFetchPatient(q);
+});
+
+$("#consent-cancel")?.addEventListener("click", () => {
+  hideConsentModal();
+  toast("Consent not granted — records not shown");
+});
+
+$("#consent-otp")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    $("#consent-grant")?.click();
   }
 });
 
@@ -936,7 +1325,8 @@ function startSyncPolling() {
         renderAll();
         const active = document.querySelector(".tab.active")?.dataset?.tab;
         if (active === "passport") renderPassport();
-        toast("Live sync: hospital data updated");
+        if (active === "fetch" && state.lastFetchedQuery) runFetchPatient(state.lastFetchedQuery, true);
+        toast("Consent-based sync: hospital data updated");
       }
     } catch (_) {}
   }, 3000);

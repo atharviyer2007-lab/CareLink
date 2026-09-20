@@ -541,7 +541,12 @@ def api_add_full(key):
 
 @app.route("/api/reset", methods=["POST"])
 def api_reset():
-    save(default_data())
+    seed_file = Path(__file__).parent / "demo_seed.json"
+    if seed_file.exists():
+        with open(seed_file, "r", encoding="utf-8") as f:
+            save(json.load(f))
+    else:
+        save(default_data())
     return jsonify({"ok": True})
 
 
@@ -551,4 +556,4 @@ if __name__ == "__main__":
     print("  City Care:     http://localhost:5001/city-care/")
     print("  Vision Plus:   http://localhost:5001/vision-plus/")
     print("  Mother Child:  http://localhost:5001/mother-child/\n")
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="127.0.0.1", port=5001, debug=False)
