@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ h.name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --c: {{ h.color }}; }
+    * { box-sizing: border-box; }
+    body { font-family: "DM Sans", system-ui, sans-serif; margin: 0; background: #f6f8f7; color: #0f1f1c; }
+    header { background: var(--c); color: #fff; padding: 1.5rem 1.25rem; }
+    header a { color: rgba(255,255,255,.85); font-size: .85rem; text-decoration: none; }
+    header h1 { margin: .35rem 0 0; font-size: 1.6rem; }
+    .tag { opacity: .9; font-size: .9rem; margin: .2rem 0 0; }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 1.25rem; }
+    .card { background: #fff; border: 1px solid #e2e8e6; border-radius: 14px; padding: 1.1rem 1.2rem; margin-bottom: 1rem; }
+    h2 { font-size: 1.05rem; margin: 0 0 .75rem; }
+    h3 { font-size: .95rem; margin: 1rem 0 .5rem; color: #3d5a54; }
+    .patient { border-top: 1px solid #eef2f1; padding-top: .85rem; margin-top: .85rem; }
+    .patient:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+    .name { font-weight: 700; }
+    .meta { font-size: .85rem; color: #5a726c; margin-top: .2rem; }
+    .pill { display: inline-block; font-size: .7rem; font-weight: 700; padding: .15rem .45rem; border-radius: 6px; background: #e0f2fe; color: #075985; }
+    ul { margin: .4rem 0 0; padding-left: 1.1rem; font-size: .88rem; color: #3d5a54; }
+    label { display: block; font-size: .78rem; font-weight: 600; margin-bottom: .25rem; color: #3d5a54; }
+    input, select, textarea {
+      width: 100%; padding: .5rem .7rem; border: 1px solid #d5e5df; border-radius: 10px;
+      font: inherit; margin-bottom: .65rem; background: #fafcfb;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+    button, .btn {
+      background: var(--c); color: #fff; border: none; border-radius: 10px;
+      padding: .55rem 1rem; font: inherit; font-weight: 600; cursor: pointer;
+    }
+    button.secondary { background: #fff; color: var(--c); border: 1px solid var(--c); }
+    .search { display: flex; gap: .5rem; flex-wrap: wrap; align-items: flex-end; }
+    .search .field { flex: 1; min-width: 160px; margin: 0; }
+    .search input { margin: 0; }
+    #out { margin-top: .75rem; font-size: .85rem; white-space: pre-wrap; background: #0f1f1c; color: #e2e8e6; padding: 1rem; border-radius: 10px; display: none; max-height: 240px; overflow: auto; }
+    .msg { font-size: .88rem; margin-top: .5rem; padding: .55rem .75rem; border-radius: 8px; display: none; }
+    .msg.ok { display: block; background: #d1fae5; color: #065f46; }
+    .msg.err { display: block; background: #fee2e2; color: #991b1b; }
+    .tabs { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: .85rem; }
+    .tabs button { background: #eef2f1; color: #0f1f1c; }
+    .tabs button.on { background: var(--c); color: #fff; }
+    .panel { display: none; }
+    .panel.on { display: block; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">← All hospitals</a>
+    <h1>{{ h.name }}</h1>
+    <p class="tag">{{ h.city }} · {{ h.type }} · {{ h.phone }}</p>
+    <p class="tag">{{ h.tagline }}</p>
+  </header>
+  <div class="wrap">
+    <div class="card">
+      <h2>Add to this hospital (syncs to CareLink on Fetch)</h2>
+      <div class="tabs">
+        <button type="button" class="on" data-panel="p-patient">New patient</button>
+        <button type="button" data-panel="p-record">Add visit + report</button>
+        <button type="button" data-panel="p-lookup">Lookup API</button>
+      </div>
+
+      <div id="p-patient" class="panel on">
+        <form id="form-patient">
+          <div class="row">
+            <div><label>Full name *</label><input name="name" required placeholder="e.g. Priya Nair" /></div>
+            <div><label>Email</label><input name="email" type="email" placeholder="priya@email.com" /></div>
+          </div>
+          <div class="row">
+            <div><label>Date of birth</label><input name="dob" type="date" /></div>
+            <div></div>
+          </div>
+          <button type="submit">Save patient</button>
+          <div class="msg" id="msg-patient"></div>
+        </form>
+      </div>
+
+      <div id="p-record" class="panel">
+        <form id="form-record">
+          <div class="row">
+            <div><label>Patient name *</label><input name="name" required placeholder="Must match patient name" /></div>
+            <div><label>Email</label><input name="email" type="email" placeholder="optional — creates if new" /></div>
+          </div>
+          <h3>Visit</h3>
+          <div class="row">
+            <div><label>Department</label><input name="department" placeholder="Cardiology" /></div>
+            <div><label>Doctor</label><input name="doctor" placeholder="Dr. Rao" /></div>
+          </div>
+          <div class="row">
+            <div><label>Reason</label><input name="reason" placeholder="Follow-up / chest pain" /></div>
+            <div><label>Visit date</label><input name="visit_date" type="date" /></div>
+          </div>
+          <h3>Report</h3>
+          <div class="row">
+            <div><label>Report title</label><input name="report_title" placeholder="ECG / Blood panel" /></div>
+            <div><label>Type</label>
+              <select name="report_type">
+                <option>Lab report</option>
+                <option>Imaging</option>
+                <option>Investigation</option>
+                <option>Discharge summary</option>
+                <option>Clinical note</option>
+                <option>Prescription</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div><label>Report date</label><input name="report_date" type="date" /></div>
+            <div><label>Summary / findings</label><input name="summary" placeholder="Key findings…" /></div>
+          </div>
+          <button type="submit">Save visit & report</button>
+          <div class="msg" id="msg-record"></div>
+        </form>
+      </div>
+
+      <div id="p-lookup" class="panel">
+        <div class="search">
+          <div class="field"><label>Search name</label><input id="q" placeholder="Meera Patel" /></div>
+          <button type="button" id="go">Search API</button>
+        </div>
+        <pre id="out"></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Patients in this hospital ({{ h.patients|length }})</h2>
+      {% for p in h.patients %}
+      <div class="patient">
+        <div class="name">{{ p.name }}</div>
+        <div class="meta">{{ p.email }} {% if p.dob %}· DOB {{ p.dob }}{% endif %}</div>
+        <div class="meta" style="margin-top:.4rem"><span class="pill">Visits ({{ p.visits|length }})</span></div>
+        <ul>
+          {% for v in p.visits[:6] %}
+          <li>{{ v.date }} — {{ v.department }} · {{ v.reason }} ({{ v.status }})</li>
+          {% else %}
+          <li>No visits yet</li>
+          {% endfor %}
+        </ul>
+        <div class="meta" style="margin-top:.4rem"><span class="pill">Reports ({{ p.reports|length }})</span></div>
+        <ul>
+          {% for r in p.reports[:6] %}
+          <li>{{ r.date }} — <strong>{{ r.title }}</strong> ({{ r.type }}): {{ r.summary }}</li>
+          {% else %}
+          <li>No reports yet</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <script>
+    const KEY = "{{ h.id }}";
+    document.querySelectorAll(".tabs button").forEach((btn) => {
+      btn.onclick = () => {
+        document.querySelectorAll(".tabs button").forEach((b) => b.classList.remove("on"));
+        document.querySelectorAll(".panel").forEach((p) => p.classList.remove("on"));
+        btn.classList.add("on");
+        document.getElementById(btn.dataset.panel).classList.add("on");
+      };
+    });
+
+    function showMsg(id, ok, text) {
+      const el = document.getElementById(id);
+      el.className = "msg " + (ok ? "ok" : "err");
+      el.textContent = text;
+    }
+
+    document.getElementById("form-patient").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = Object.fromEntries(fd.entries());
+      const res = await fetch("/api/" + KEY + "/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) return showMsg("msg-patient", false, data.error || "Failed");
+      showMsg("msg-patient", true, (data.created ? "Created" : "Updated") + ": " + data.patient.name + " — refresh page to see list, then Fetch in CareLink");
+      setTimeout(() => location.reload(), 900);
+    };
+
+    document.getElementById("form-record").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = Object.fromEntries(fd.entries());
+      const res = await fetch("/api/" + KEY + "/add-full", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) return showMsg("msg-record", false, data.error || "Failed");
+      showMsg("msg-record", true, "Saved for " + data.patient.name + ". Open CareLink → Fetch records → type this name.");
+      setTimeout(() => location.reload(), 1000);
+    };
+
+    document.getElementById("go").onclick = async () => {
+      const name = document.getElementById("q").value.trim();
+      const out = document.getElementById("out");
+      out.style.display = "block";
+      out.textContent = "Loading…";
+      const res = await fetch("/api/" + KEY + "/patient?name=" + encodeURIComponent(name));
+      out.textContent = JSON.stringify(await res.json(), null, 2);
+    };
+  </script>
+</body>
+</html>

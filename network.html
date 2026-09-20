@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo Hospital Network</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: "DM Sans", system-ui, sans-serif; margin: 0; background: #f0f4f3; color: #0f1f1c; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 2rem 1.25rem; }
+    h1 { font-size: 1.75rem; margin: 0 0 0.35rem; }
+    .sub { color: #5a726c; margin-bottom: 1.5rem; }
+    .grid { display: grid; gap: 1rem; }
+    @media (min-width: 700px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+    .card {
+      background: #fff; border-radius: 14px; padding: 1.25rem; border: 1px solid #d5e5df;
+      box-shadow: 0 4px 16px rgba(15,31,28,.05); text-decoration: none; color: inherit;
+      display: block; transition: transform .15s, border-color .15s;
+    }
+    .card:hover { transform: translateY(-2px); border-color: #0d9488; }
+    .badge { display: inline-block; font-size: .72rem; font-weight: 700; padding: .2rem .5rem; border-radius: 6px; color: #fff; margin-bottom: .5rem; }
+    .card h2 { font-size: 1.1rem; margin: 0 0 .25rem; }
+    .meta { font-size: .85rem; color: #5a726c; }
+    code { background: #e8f0ed; padding: .15rem .4rem; border-radius: 4px; font-size: .8rem; }
+    .note { margin-top: 1.5rem; padding: 1rem; background: #fff; border-radius: 12px; border: 1px solid #d5e5df; font-size: .9rem; color: #3d5a54; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Demo Hospital Network</h1>
+    <p class="sub">3 fake hospitals CareLink can query. Open a hospital site, or use the APIs from CareLink.</p>
+    <div class="grid">
+      {% for h in hospitals %}
+      <a class="card" href="/{{ h.id }}/">
+        <span class="badge" style="background:{{ h.color }}">{{ h.type }}</span>
+        <h2>{{ h.name }}</h2>
+        <p class="meta">{{ h.city }} · {{ h.phone }}</p>
+        <p class="meta">{{ h.tagline }}</p>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="note">
+      <strong>API example:</strong><br />
+      <code>/api/city-care/patient?name=Meera Patel</code><br />
+      <code>/api/vision-plus/patient?name=Ramesh Kumar</code><br />
+      <code>/api/mother-child/patient?name=Fatima Sheikh</code>
+    </div>
+  </div>
+</body>
+</html>
