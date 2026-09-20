@@ -1,0 +1,496 @@
+{
+  "patients": [
+    {
+      "id": "p1",
+      "name": "Meera Patel",
+      "email": "meera@example.com",
+      "phone": "",
+      "age": 42,
+      "condition": "Cardiology \u00b7 TMT pending"
+    },
+    {
+      "id": "p2",
+      "name": "Ramesh Kumar",
+      "email": "ramesh@example.com",
+      "phone": "",
+      "age": 58,
+      "condition": "Eye follow-up overdue"
+    },
+    {
+      "id": "p3",
+      "name": "Fatima Sheikh",
+      "email": "fatima@example.com",
+      "phone": "",
+      "age": 28,
+      "condition": "ANC report ready"
+    },
+    {
+      "id": "p4",
+      "name": "Arjun Desai",
+      "email": "arjun@example.com",
+      "phone": "",
+      "age": 35,
+      "condition": "Spirometry blocked"
+    },
+    {
+      "id": "p5",
+      "name": "Lakshmi Iyer",
+      "email": "lakshmi@example.com",
+      "phone": "",
+      "age": 61,
+      "condition": "HTN follow-up"
+    },
+    {
+      "id": "p6",
+      "name": "Ananya Rao",
+      "email": "ananya@example.com",
+      "phone": "",
+      "age": 24,
+      "condition": "Journey closed"
+    },
+    {
+      "id": "p_b2e6b260",
+      "name": "Atharv",
+      "email": "atharvakila@gmail.com",
+      "phone": "",
+      "age": "",
+      "condition": "Imported from hospital network"
+    }
+  ],
+  "journeys": [
+    {
+      "id": "j_7fc87377",
+      "patient_id": "p_b2e6b260",
+      "title": "Imported care journey",
+      "facility": "Hospital network",
+      "status": "open",
+      "stages": {
+        "referral": {
+          "status": "done",
+          "verification": "none",
+          "note": "Imported from hospital network",
+          "updated_at": "2026-09-20T04:05:08.029381Z"
+        },
+        "appointment": {
+          "status": "pending",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T04:05:08.029381Z"
+        },
+        "test": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T04:05:08.029381Z"
+        },
+        "report": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T04:05:08.029381Z"
+        },
+        "specialist": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T04:05:08.029381Z"
+        },
+        "followup": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T04:05:08.029381Z"
+        }
+      },
+      "created_at": "2026-09-20T04:05:08.029381Z"
+    },
+    {
+      "id": "j1",
+      "patient_id": "p1",
+      "title": "Cardiology \u00b7 TMT",
+      "facility": "City Care Hospital",
+      "status": "open",
+      "stages": {
+        "referral": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "appointment": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "test": {
+          "status": "pending",
+          "verification": "none",
+          "note": "TMT scheduled \u2014 fasting needed",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "report": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "specialist": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "followup": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        }
+      },
+      "created_at": "2026-09-15T03:58:06.850222Z"
+    },
+    {
+      "id": "j2",
+      "patient_id": "p2",
+      "title": "Ophthalmology follow-up",
+      "facility": "Vision Plus Clinic",
+      "status": "open",
+      "stages": {
+        "referral": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "appointment": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "test": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "report": {
+          "status": "done",
+          "verification": "document",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "specialist": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "followup": {
+          "status": "overdue",
+          "verification": "none",
+          "note": "Follow-up was due 2 weeks ago",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        }
+      },
+      "created_at": "2026-08-11T03:58:06.850222Z"
+    },
+    {
+      "id": "j3",
+      "patient_id": "p3",
+      "title": "ANC check",
+      "facility": "Mother & Child Centre",
+      "status": "open",
+      "stages": {
+        "referral": {
+          "status": "done",
+          "verification": "asha",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "appointment": {
+          "status": "done",
+          "verification": "asha",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "test": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "report": {
+          "status": "pending",
+          "verification": "none",
+          "note": "Lab report uploaded \u2014 needs review",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "specialist": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "followup": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        }
+      },
+      "created_at": "2026-09-08T03:58:06.850222Z"
+    },
+    {
+      "id": "j4",
+      "patient_id": "p4",
+      "title": "Pulmonology \u00b7 Spirometry",
+      "facility": "Lung Care Unit",
+      "status": "open",
+      "stages": {
+        "referral": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "appointment": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "test": {
+          "status": "blocked",
+          "verification": "none",
+          "note": "Machine down \u2014 reschedule needed",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "report": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "specialist": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "followup": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        }
+      },
+      "created_at": "2026-09-12T03:58:06.850222Z"
+    },
+    {
+      "id": "j5",
+      "patient_id": "p5",
+      "title": "Hypertension follow-up",
+      "facility": "Primary Health Centre",
+      "status": "open",
+      "stages": {
+        "referral": {
+          "status": "done",
+          "verification": "asha",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "appointment": {
+          "status": "pending",
+          "verification": "none",
+          "note": "Slot next week",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "test": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "report": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "specialist": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "followup": {
+          "status": "locked",
+          "verification": "none",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        }
+      },
+      "created_at": "2026-09-17T03:58:06.850222Z"
+    },
+    {
+      "id": "j6",
+      "patient_id": "p6",
+      "title": "Dermatology closed",
+      "facility": "Skin Clinic",
+      "status": "closed",
+      "stages": {
+        "referral": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "appointment": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "test": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "report": {
+          "status": "done",
+          "verification": "document",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "specialist": {
+          "status": "done",
+          "verification": "provider",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        },
+        "followup": {
+          "status": "done",
+          "verification": "patient",
+          "note": "",
+          "updated_at": "2026-09-20T03:58:06.850222Z"
+        }
+      },
+      "created_at": "2026-07-22T03:58:06.850222Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "journey_id": "j1",
+      "from": "patient",
+      "body": "TMT done this morning",
+      "at": "2026-09-20T01:58:06.850222Z"
+    },
+    {
+      "id": "m2",
+      "journey_id": "j1",
+      "from": "system",
+      "body": "Great \u2014 next step is report review. Upload or ask the lab to share with City Care Hospital.",
+      "at": "2026-09-20T02:03:06.850222Z"
+    },
+    {
+      "id": "m3",
+      "journey_id": "j2",
+      "from": "patient",
+      "body": "Please reschedule my eye follow-up",
+      "at": "2026-09-19T03:58:06.850222Z"
+    },
+    {
+      "id": "m4",
+      "journey_id": "j2",
+      "from": "system",
+      "body": "Follow-up is overdue. Reply with preferred dates or call Vision Plus Clinic.",
+      "at": "2026-09-19T04:58:06.850222Z"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "c31d8210-b0d6-486d-ae2a-d44c728e77eb",
+      "patient_name": "Meera Patel",
+      "email": "meera@example.com",
+      "date": "2026-09-22",
+      "time": "10:00",
+      "type": "TMT / Stress Test",
+      "facility": "City Care Hospital",
+      "notes": "Fasting required",
+      "status": "scheduled",
+      "created_at": "2026-09-20T03:58:06.850222Z",
+      "email_sent": false,
+      "email_mode": "demo",
+      "journey_id": "j1"
+    }
+  ],
+  "notifications": [],
+  "reports": [],
+  "hospitals": [
+    {
+      "id": "h1",
+      "name": "City Care Hospital",
+      "city": "Mumbai",
+      "type": "Multi-specialty"
+    },
+    {
+      "id": "h2",
+      "name": "Vision Plus Clinic",
+      "city": "Mumbai",
+      "type": "Eye care"
+    },
+    {
+      "id": "h3",
+      "name": "Mother & Child Centre",
+      "city": "Pune",
+      "type": "Maternity"
+    },
+    {
+      "id": "h4",
+      "name": "Lung Care Unit",
+      "city": "Mumbai",
+      "type": "Pulmonology"
+    },
+    {
+      "id": "h5",
+      "name": "Primary Health Centre",
+      "city": "Thane",
+      "type": "PHC"
+    }
+  ],
+  "external_records": [
+    {
+      "id": "er1",
+      "patient_id": "p1",
+      "journey_id": "j1",
+      "hospital_id": "h1",
+      "hospital_name": "City Care Hospital",
+      "title": "ECG baseline",
+      "record_type": "Investigation",
+      "date": "2026-09-10",
+      "notes": "Shared from City Care EMR",
+      "file_id": null,
+      "created_at": "2026-09-20T03:58:06.850222Z"
+    },
+    {
+      "id": "er2",
+      "patient_id": "p2",
+      "journey_id": "j2",
+      "hospital_id": "h2",
+      "hospital_name": "Vision Plus Clinic",
+      "title": "Retina scan summary",
+      "record_type": "Imaging",
+      "date": "2026-08-21",
+      "notes": "Imported from Vision Plus",
+      "file_id": null,
+      "created_at": "2026-08-31T03:58:06.850222Z"
+    }
+  ],
+  "role": "patient",
+  "acting_patient_id": "p1",
+  "sync_version": 0
+}

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareLink — Care Passport + Email</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <span class="logo">🏥</span>
+        <div>
+          <h1>CareLink</h1>
+          <p class="tagline">Care Passport · Calendar · Email</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <select id="role-select" class="role-select" title="Switch role">
+          <option value="patient">Patient</option>
+          <option value="caregiver">Caregiver</option>
+          <option value="doctor">Doctor</option>
+          <option value="asha">ASHA</option>
+        </select>
+        <span id="email-status" class="status-pill demo">Email: Demo</span>
+        <span id="sync-indicator" class="status-pill live" title="Hospital live sync">Sync: on</span>
+        <button id="btn-help" class="btn ghost">❓ Help</button>
+        <button id="btn-reset" class="btn ghost" title="Reset demo data">Reset</button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="dashboard">Dashboard</button>
+      <button class="tab" data-tab="passport">Care Passport</button>
+      <button class="tab" data-tab="messages">Messages</button>
+      <button class="tab" data-tab="calendar">Calendar & Book</button>
+      <button class="tab" data-tab="fetch">Fetch records</button>
+      <button class="tab" data-tab="verify">Verify Desk</button>
+    </nav>
+
+    <!-- HELP PANEL -->
+    <section id="panel-help" class="card panel hidden">
+      <div class="card-head">
+        <h2>Help</h2>
+        <button class="btn ghost small" id="btn-close-help">Close</button>
+      </div>
+      <div class="help-body">
+        <h3>How to use CareLink</h3>
+        <ul class="help-list">
+          <li><strong>Dashboard</strong> — open journeys, overdue/blocked alerts</li>
+          <li><strong>Care Passport</strong> — 6 stages; mark done or verify</li>
+          <li><strong>Messages</strong> — chat threads + quick replies</li>
+          <li><strong>Calendar & Book</strong> — book appointment → email confirmation</li>
+          <li><strong>Report upload</strong> — on Care Passport, attach PDF/image to Report stage</li>
+          <li><strong>Reminders</strong> — automatic email for appointments today/tomorrow</li>
+          <li><strong>Verify Desk</strong> — ASHA / provider verification actions</li>
+          <li><strong>Role</strong> (top right) — switch Patient / Caregiver / Doctor / ASHA</li>
+          <li><strong>Reset</strong> — restore demo patients and journeys</li>
+        </ul>
+        <h3>Email setup (so patients get mail)</h3>
+        <ol class="setup-steps">
+          <li>Enable <strong>2-Step Verification</strong> on your Google account</li>
+          <li>Create an <strong>App Password</strong>: <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a></li>
+          <li>Create a file named <code>.env</code> next to <code>app.py</code> with:</li>
+        </ol>
+        <pre class="code-block">SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=yourname@gmail.com
+SMTP_PASSWORD=your_16_char_app_password
+SMTP_FROM=yourname@gmail.com
+SMTP_TLS=true
+PORT=5000</pre>
+        <p class="muted">Restart the app (<code>py app.py</code>). Status should show <strong>Email: Live</strong>.</p>
+        <h3>Book &amp; notify</h3>
+        <p class="muted">Calendar & Book → fill name, <strong>email</strong>, date, time → <strong>Book & Send Email</strong>.</p>
+        <div class="field" style="margin-top:1rem">
+          <label>Quick test — send email to yourself</label>
+          <input id="test-email" type="email" placeholder="you@gmail.com" />
+        </div>
+        <button id="btn-test-email" class="btn primary">Send Test Email</button>
+        <div id="test-email-msg" class="form-msg hidden"></div>
+      </div>
+    </section>
+
+    <section id="tab-dashboard" class="tab-panel">
+      <div class="metrics" id="metrics"></div>
+      <div class="card" style="margin-bottom:1.1rem">
+        <div class="card-head"><h2>Add person</h2></div>
+        <form id="add-patient-form" class="add-person-form">
+          <div class="row">
+            <div class="field"><label>Name *</label><input name="name" required placeholder="Patient name" /></div>
+            <div class="field"><label>Email *</label><input name="email" type="email" required placeholder="email@example.com" /></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Condition / reason</label><input name="condition" placeholder="e.g. Cardiology follow-up" /></div>
+            <div class="field"><label>Journey title</label><input name="title" placeholder="e.g. Cardiology · TMT" /></div>
+          </div>
+          <div class="field"><label>Facility</label><input name="facility" placeholder="City Care Hospital" /></div>
+          <button type="submit" class="btn primary">Add person & start passport</button>
+          <div id="add-patient-msg" class="form-msg hidden"></div>
+        </form>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h2>Journeys</h2><span id="journey-count" class="badge">0</span></div>
+          <div id="journey-list" class="list"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Next actions / Alerts</h2></div>
+          <div id="alerts-list" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-passport" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head">
+          <h2>Care Passport</h2>
+          <select id="passport-journey" class="select-inline"></select>
+        </div>
+        <div id="passport-header" class="passport-header"></div>
+        <div id="passport-stages" class="stages"></div>
+        <div class="external-records-box" id="external-records-box" style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line)">
+          <h3 style="font-size:0.95rem;margin-bottom:0.35rem">Records from hospitals</h3>
+          <p class="muted">Pull together reports and notes from different hospitals into this passport.</p>
+          <form id="external-record-form">
+            <div class="row">
+              <div class="field">
+                <label>Hospital *</label>
+                <select id="er-hospital" name="hospital_id"></select>
+              </div>
+              <div class="field">
+                <label>Or type new hospital</label>
+                <input id="er-hospital-name" name="hospital_name" placeholder="e.g. Apollo Hospital" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Record title *</label><input id="er-title" name="title" required placeholder="e.g. MRI brain report" /></div>
+              <div class="field">
+                <label>Type</label>
+                <select id="er-type" name="record_type">
+                  <option>Investigation</option>
+                  <option>Imaging</option>
+                  <option>Discharge summary</option>
+                  <option>Prescription</option>
+                  <option>Lab report</option>
+                  <option>Referral letter</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Date</label><input id="er-date" name="date" type="date" /></div>
+              <div class="field"><label>File (optional)</label><input id="er-file" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif" /></div>
+            </div>
+            <div class="field"><label>Notes</label><input id="er-notes" name="notes" placeholder="How was this shared? e.g. patient brought CD" /></div>
+            <button type="submit" class="btn primary">Add hospital record</button>
+            <div id="er-msg" class="form-msg hidden"></div>
+          </form>
+          <div id="external-record-list" class="list" style="margin-top:0.85rem"></div>
+        </div>
+        <div class="report-upload-box" id="report-upload-box" style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line)">
+          <h3 style="font-size:0.95rem;margin-bottom:0.5rem">Report upload</h3>
+          <p class="muted">Upload PDF or image for this passport (Report stage).</p>
+          <form id="report-upload-form">
+            <div class="field"><label>File (pdf, png, jpg)</label><input type="file" name="file" id="report-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif" required /></div>
+            <div class="field"><label>Note</label><input name="note" id="report-note" placeholder="e.g. Lab results 20 Sep" /></div>
+            <button type="submit" class="btn primary">Upload report</button>
+            <div id="report-upload-msg" class="form-msg hidden"></div>
+          </form>
+          <div id="report-list" class="list" style="margin-top:0.75rem"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-messages" class="tab-panel hidden">
+      <div class="messages-layout">
+        <div class="card threads-card">
+          <h2>Threads</h2>
+          <div id="thread-list" class="thread-list"></div>
+        </div>
+        <div class="card chat-card">
+          <div id="chat-header" class="chat-header">Select a thread</div>
+          <div id="chat-body" class="chat-body"></div>
+          <div class="chat-quick" id="chat-quick"></div>
+          <form id="chat-form" class="chat-form">
+            <input id="chat-input" placeholder="Type a message…" autocomplete="off" />
+            <button type="submit" class="btn primary">Send</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-calendar" class="tab-panel hidden">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <h2>Calendar</h2>
+            <div class="cal-nav">
+              <button id="cal-prev" class="btn ghost small">‹</button>
+              <span id="cal-title" class="cal-title">—</span>
+              <button id="cal-next" class="btn ghost small">›</button>
+              <button id="cal-today" class="btn ghost small">Today</button>
+            </div>
+          </div>
+          <div id="calendar" class="calendar"></div>
+          <p class="muted cal-hint">Click a day to filter · Dots = appointments</p>
+        </div>
+        <div class="card">
+          <h2>Book Appointment</h2>
+          <p class="muted">Sends email confirmation instantly.</p>
+          <form id="appt-form">
+            <div class="field"><label>Patient Name *</label><input name="patient_name" required placeholder="Meera Patel" /></div>
+            <div class="field"><label>Email *</label><input name="email" type="email" required placeholder="you@gmail.com" /></div>
+            <div class="row">
+              <div class="field"><label>Date *</label><input name="date" type="date" required id="date" /></div>
+              <div class="field"><label>Time *</label><input name="time" type="time" required id="time" /></div>
+            </div>
+            <div class="field">
+              <label>Type</label>
+              <select name="type">
+                <option>Consultation</option>
+                <option>TMT / Stress Test</option>
+                <option>Follow-up</option>
+                <option>Lab Report Review</option>
+                <option>Specialist Referral</option>
+                <option>ANC Check</option>
+              </select>
+            </div>
+            <div class="field"><label>Facility</label><input name="facility" placeholder="City Care Hospital" /></div>
+            <div class="field"><label>Notes</label><textarea name="notes" rows="2"></textarea></div>
+            <button type="submit" class="btn primary full" id="btn-submit">Book & Send Email</button>
+          </form>
+          <div id="form-msg" class="form-msg hidden"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1.25rem">
+        <div class="card-head">
+          <h2 id="appt-heading">Appointments</h2>
+          <div class="head-actions">
+            <button id="btn-clear-filter" class="btn ghost small hidden">Show all</button>
+            <span id="appt-count" class="badge">0</span>
+          </div>
+        </div>
+        <div id="appt-list" class="list"></div>
+      </div>
+      <div class="card" style="margin-top:1.25rem">
+        <div class="card-head"><h2>Notifications</h2><span id="notif-count" class="badge">0</span></div>
+        <div id="notif-list" class="list notif-list"></div>
+      </div>
+    </section>
+
+    
+    <section id="tab-fetch" class="tab-panel hidden">
+      <div class="card">
+        <h2>Fetch care records</h2>
+        <p class="muted">Enter a patient name — CareLink collects visits, reports, and files from every hospital linked to them.</p>
+        <form id="fetch-form" class="fetch-form">
+          <div class="field">
+            <label>Patient name or email</label>
+            <input id="fetch-query" name="query" required placeholder="e.g. Meera Patel" autocomplete="off" />
+          </div>
+          <button type="submit" class="btn primary" id="btn-fetch">Search all hospitals</button>
+          <div id="fetch-msg" class="form-msg hidden"></div>
+        </form>
+        <div id="fetch-progress" class="fetch-progress hidden">
+          <div class="fetch-bar"><div class="fetch-bar-inner" id="fetch-bar-inner"></div></div>
+          <p id="fetch-progress-text" class="muted">Querying hospitals…</p>
+        </div>
+      </div>
+      <div id="fetch-results" class="fetch-results hidden" style="margin-top:1.1rem"></div>
+    </section>
+
+    <section id="tab-verify" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head"><h2>Verify Desk</h2><p class="muted" style="margin:0">ASHA / Provider — large actions</p></div>
+        <div id="verify-list" class="verify-list"></div>
+      </div>
+    </section>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

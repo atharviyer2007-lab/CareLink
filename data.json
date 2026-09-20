@@ -1,0 +1,238 @@
+{
+  "city-care": {
+    "id": "city-care",
+    "name": "City Care Hospital",
+    "city": "Mumbai",
+    "type": "Multi-specialty",
+    "phone": "+91 22 4000 1000",
+    "color": "#0d9488",
+    "tagline": "Complete care under one roof",
+    "patients": [
+      {
+        "id": "cc-p1",
+        "name": "Meera Patel",
+        "email": "meera@example.com",
+        "dob": "1984-03-12",
+        "visits": [
+          {
+            "id": "v1",
+            "date": "2026-09-08",
+            "department": "Cardiology",
+            "doctor": "Dr. Rao",
+            "reason": "Chest pain evaluation",
+            "status": "completed"
+          },
+          {
+            "id": "v2",
+            "date": "2026-09-15",
+            "department": "Cardiology",
+            "doctor": "Dr. Rao",
+            "reason": "TMT scheduling",
+            "status": "scheduled"
+          }
+        ],
+        "reports": [
+          {
+            "id": "cc-r1",
+            "title": "ECG Baseline",
+            "type": "Investigation",
+            "date": "2026-09-08",
+            "summary": "Sinus rhythm. No acute ischemic changes."
+          },
+          {
+            "id": "cc-r2",
+            "title": "Lipid Profile",
+            "type": "Lab report",
+            "date": "2026-09-09",
+            "summary": "LDL mildly elevated. Lifestyle advice given."
+          }
+        ]
+      },
+      {
+        "id": "cc-p2",
+        "name": "Arjun Desai",
+        "email": "arjun@example.com",
+        "dob": "1991-07-22",
+        "visits": [
+          {
+            "id": "v3",
+            "date": "2026-09-12",
+            "department": "Pulmonology",
+            "doctor": "Dr. Khan",
+            "reason": "Breathlessness",
+            "status": "completed"
+          }
+        ],
+        "reports": [
+          {
+            "id": "cc-r3",
+            "title": "Chest X-Ray",
+            "type": "Imaging",
+            "date": "2026-09-12",
+            "summary": "No consolidation. Spirometry advised."
+          }
+        ]
+      }
+    ]
+  },
+  "vision-plus": {
+    "id": "vision-plus",
+    "name": "Vision Plus Clinic",
+    "city": "Mumbai",
+    "type": "Eye care",
+    "phone": "+91 22 4000 2000",
+    "color": "#2563eb",
+    "tagline": "Clear sight, better life",
+    "patients": [
+      {
+        "id": "p_f6a15029",
+        "name": "Atharv",
+        "email": "atharvakila@gmail.com",
+        "dob": "2007-01-15",
+        "visits": [],
+        "reports": []
+      },
+      {
+        "id": "vp-p1",
+        "name": "Ramesh Kumar",
+        "email": "ramesh@example.com",
+        "dob": "1968-01-05",
+        "visits": [
+          {
+            "id": "v4",
+            "date": "2026-08-06",
+            "department": "Retina",
+            "doctor": "Dr. Shah",
+            "reason": "Diabetic eye check",
+            "status": "completed"
+          },
+          {
+            "id": "v5",
+            "date": "2026-09-06",
+            "department": "Retina",
+            "doctor": "Dr. Shah",
+            "reason": "Follow-up (overdue)",
+            "status": "missed"
+          }
+        ],
+        "reports": [
+          {
+            "id": "vp-r1",
+            "title": "Retina Scan Summary",
+            "type": "Imaging",
+            "date": "2026-08-06",
+            "summary": "Mild NPDR. Follow-up in 4 weeks recommended."
+          },
+          {
+            "id": "vp-r2",
+            "title": "Visual Acuity Chart",
+            "type": "Investigation",
+            "date": "2026-08-06",
+            "summary": "OD 6/9, OS 6/12 with correction."
+          }
+        ]
+      },
+      {
+        "id": "vp-p2",
+        "name": "Meera Patel",
+        "email": "meera@example.com",
+        "dob": "1984-03-12",
+        "visits": [
+          {
+            "id": "v6",
+            "date": "2026-06-22",
+            "department": "General Ophthalmology",
+            "doctor": "Dr. Mehta",
+            "reason": "Routine eye exam",
+            "status": "completed"
+          }
+        ],
+        "reports": [
+          {
+            "id": "vp-r3",
+            "title": "Refraction Report",
+            "type": "Investigation",
+            "date": "2026-06-22",
+            "summary": "Mild myopia. Glasses advised for distance."
+          }
+        ]
+      }
+    ]
+  },
+  "mother-child": {
+    "id": "mother-child",
+    "name": "Mother & Child Centre",
+    "city": "Pune",
+    "type": "Maternity & child health",
+    "phone": "+91 20 4000 3000",
+    "color": "#db2777",
+    "tagline": "Safe motherhood, healthy children",
+    "patients": [
+      {
+        "id": "mc-p1",
+        "name": "Fatima Sheikh",
+        "email": "fatima@example.com",
+        "dob": "1998-11-18",
+        "visits": [
+          {
+            "id": "v7",
+            "date": "2026-08-31",
+            "department": "ANC",
+            "doctor": "Dr. Banerjee",
+            "reason": "Antenatal check \u2014 2nd trimester",
+            "status": "completed"
+          },
+          {
+            "id": "v8",
+            "date": "2026-09-15",
+            "department": "Lab",
+            "doctor": "Lab Unit",
+            "reason": "ANC panel bloodwork",
+            "status": "completed"
+          }
+        ],
+        "reports": [
+          {
+            "id": "mc-r1",
+            "title": "ANC Ultrasound",
+            "type": "Imaging",
+            "date": "2026-08-31",
+            "summary": "Single live intrauterine gestation. Parameters normal."
+          },
+          {
+            "id": "mc-r2",
+            "title": "ANC Blood Panel",
+            "type": "Lab report",
+            "date": "2026-09-15",
+            "summary": "Hb 11.2. Iron supplementation ongoing."
+          }
+        ]
+      },
+      {
+        "id": "mc-p2",
+        "name": "Lakshmi Iyer",
+        "email": "lakshmi@example.com",
+        "dob": "1965-09-02",
+        "visits": [
+          {
+            "id": "v9",
+            "date": "2026-07-22",
+            "department": "General Medicine",
+            "doctor": "Dr. Nair",
+            "reason": "BP review (linked PHC referral)",
+            "status": "completed"
+          }
+        ],
+        "reports": [
+          {
+            "id": "mc-r3",
+            "title": "BP Trend Note",
+            "type": "Clinical note",
+            "date": "2026-07-22",
+            "summary": "Hypertension controlled on current meds."
+          }
+        ]
+      }
+    ]
+  }
+}
